@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>File Management</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css">
+
+    <style>
+        .fa,
+        .fas {
+            color: #858585;
+        }
+
+        .fa-folder {
+            color: rgb(74, 158, 255);
+        }
+
+        i.action {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="row align-items-center py-5">
+            <div class="col-6">
+                <h3>File Manager</h3>
+            </div>
+            <div class="col-6">
+                <div class="dropdown text-right">
+                    Xin chào
+                    <a class="dropdown-toggle text-primary" data-toggle="dropdown">
+                        <%= session.user.username %>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-info-circle"></i> Cập nhật thông tin
+                        </a>
+                        <a class="dropdown-item" href="/logout">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="/files">Home</a>
+            </li>
+
+            <% pathParts.forEach((p, idx)=> { %>
+                <li class="breadcrumb-item <%= idx === pathParts.length - 1 ? 'active' : '' %>">
+                    <% if (idx===pathParts.length - 1) { %>
+                        <%= p.name %>
+                            <% } else { %>
+                                <a href="/files?path=<%= p.fullPath %>">
+                                    <%= p.name %>
+                                </a>
+                                <% } %>
+                </li>
+                <% }) %>
+        </ol>
+
+
+        <!-- Search -->
+        <div class="input-group mb-3">
+            <span class="input-group-text"><span class="fa fa-search"></span></span>
+            <input id="search" type="text" class="form-control" placeholder="Search...">
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-group my-3">
+            <button id="btn-new-folder" type="button" class="btn btn-light border">
+                <i class="fas fa-folder-plus"></i> New folder
+            </button>
+
+            <button id="btn-create-text" type="button" class="btn btn-light border">
+                <i class="fas fa-file"></i> Create text file
+            </button>
+        </div>
+
+
+        <!-- TABLE FILES -->
+        <table class="table table-hover border">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Last modified</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="file-list">
+                <% items.forEach(item=> { %>
+                    <tr>
+                        <td>
+                            <% if (item.isFolder) { %>
+                                <i class="fa fa-folder"></i>
+                                <a href="/files?path=<%= item.fullPath %>">
+                                    <%= item.name %>
+                                </a>
+                                <% } else { %>
+                                    <i class="fas fa-file"></i>
+                                    <a href="/files/open?path=<%= item.fullPath %>">
+                                        <%= item.name %>
+                                    </a>
+                                    <% } %>
+                        </td>
+
+                        <td>
+                            <%= item.isFolder ? "Folder" : item.type %>
+                        </td>
+                        <td>
+                            <%= item.isFolder ? "-" : item.size %>
+                        </td>
+                        <td>
+                            <%= item.modified %>
+                        </td>
+
+                        <td>
+                            <i class="fa fa-download action" onclick="download('<%= item.fullPath %>')"></i>
+
+                            <i class="fa fa-edit action"
+                                onclick="openRename('<%= item.fullPath %>','<%= item.name %>')"></i>
+                            <i class="fa fa-trash action" onclick="openDelete('<%= item.fullPath %>')"></i>
+                        </td>
+                    </tr>
+                    <% }) %>
+            </tbody>
+        </table>
+
+        <!-- FILE UPLOAD -->
+        <div class="border rounded mb-3 mt-5 p-3">
+            <h4>File upload</h4>
+
+            <form action="/files/upload" id="uploadForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="path" value="<%= currentPath %>">
+
+                <div class="form-group">
+                    <input type="file" id="upload-file" name="file" class="form-control">
+                </div>
+
+                <div class="progress" style="height:5px; display:none">
+                    <div id="upload-progress" class="progress-bar bg-success"></div>
+                </div>
+
+                <button class="btn btn-success mt-3" type="submit">Upload</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div class="modal fade" id="delete-dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Xóa file</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="delete-body"></div>
+                <div class="modal-footer">
+                    <button id="btn-delete-confirm" type="button" class="btn btn-danger">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RENAME MODAL -->
+    <div class="modal fade" id="rename-dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Đổi tên</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <input id="rename-input" type="text" class="form-control">
+                </div>
+
+                <div class="modal-footer">
+                    <button id="btn-rename-confirm" type="button" class="btn btn-primary">Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE TEXT FILE MODAL -->
+    <div class="modal fade" id="new-text-dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Tạo file Text mới</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <input id="new-text-name" type="text" class="form-control" placeholder="Tên file (không có .txt)">
+                </div>
+
+                <div class="modal-footer">
+                    <button id="btn-new-text-confirm" type="button" class="btn btn-primary">Tạo</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            formData.append("_csrf", "<%= csrfToken %>");
+
+            let res = await fetch("/files/upload", {
+                method: "POST",
+                body: formData,
+                credentials: "include"   // <<==== RẤT QUAN TRỌNG
+            });
+
+            const json = await res.json();
+            if (json.success) location.reload();
+            else alert("Upload failed: " + json.error);
+        });
+
+        // CREATE NEW FOLDER
+        $("#btn-new-folder").click(function () {
+            let name = prompt("Nhập tên thư mục mới:");
+
+            if (!name) return;
+
+            $.post("/files/new-folder", {
+                name: name,
+                path: "<%= currentPath %>"
+            }, function (data) {
+                if (data.success) location.reload();
+            });
+        });
+
+        function download(path) {
+            window.location.href = "/files/download?path=" + encodeURIComponent(path);
+        }
+
+        $("#btn-create-text").click(function () {
+            let name = prompt("Nhập tên file text (không có .txt):");
+
+            if (!name) return;
+
+            $.post("/files/create-text", {
+                name: name,
+                path: "<%= currentPath %>"
+            }, function (data) {
+                if (data.success) location.reload();
+            });
+        });
+
+        let rename_oldPath = "";
+
+        function openRename(fullPath, oldName) {
+            rename_oldPath = fullPath;
+            $("#rename-input").val(oldName);
+            $("#rename-dialog").modal("show");
+        }
+
+        $("#btn-rename-confirm").click(async function () {
+            let newName = $("#rename-input").val().trim();
+            if (!newName) return;
+
+            const res = await fetch("/files/rename", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    oldPath: rename_oldPath,
+                    newName: newName
+                })
+            });
+
+            let json = await res.json();
+            if (json.success) location.reload();
+        });
+
+        let delete_path = "";
+
+        function openDelete(path) {
+            delete_path = path;
+            $("#delete-body").html("Bạn có chắc muốn xóa <b>" + path + "</b>?");
+            $("#delete-dialog").modal("show");
+        }
+
+        $("#btn-delete-confirm").click(async function () {
+            const res = await fetch("/files/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: delete_path })
+            });
+
+            let json = await res.json();
+            if (json.success) location.reload();
+        });
+    </script>
+
+
+</body>
+
+</html>

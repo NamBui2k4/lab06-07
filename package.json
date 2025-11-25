@@ -1,0 +1,25 @@
+{
+  "name": "lab06",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bcrypt": "^6.0.0",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.4.7",
+    "csurf": "^1.11.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "express-validator": "^7.3.1",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3"
+  }
+}
