@@ -252,3 +252,7 @@ POST /files/delete
 ![](public\new-folder.png)
 
 ![](public\hello.png)
+
+![](public\register.png)
+
+![](public\register-1.png)

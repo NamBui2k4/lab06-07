@@ -21,6 +21,10 @@
         i.action {
             cursor: pointer;
         }
+
+        .dropdown-toggle {
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -35,20 +39,23 @@
             </div>
             <div class="col-6">
                 <div class="dropdown text-right">
-                    Xin chào
-                    <a class="dropdown-toggle text-primary" data-toggle="dropdown">
-                        <%= session.user.username %>
+
+                    <a class="dropdown-toggle text-primary" data-toggle="dropdown" style="cursor:pointer;">
+                        👤 <%= session.user.username %>
                     </a>
-                    <div class="dropdown-menu">
+
+                    <div class="dropdown-menu dropdown-menu-right">
                         <a class="dropdown-item" href="#">
-                            <i class="fas fa-info-circle"></i> Cập nhật thông tin
+                            <i class="fas fa-info-circle"></i> Profile
                         </a>
                         <a class="dropdown-item" href="/logout">
-                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                            <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </div>
+
                 </div>
             </div>
+
         </div>
 
         <ol class="breadcrumb">
@@ -221,7 +228,9 @@
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
     <script>
         document.getElementById("uploadForm").addEventListener("submit", async function (e) {
             e.preventDefault();
