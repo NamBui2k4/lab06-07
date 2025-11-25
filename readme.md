@@ -245,13 +245,13 @@ POST /files/delete
 
 ## 📜 Demo result
 
-![](public\image.png)
+![](public/image.png)
 
-![](public\index.png)
+![](public/index.png)
 
-![](public\new-folder.png)
+![](public/new-folder.png)
 
-![](public\hello.png)
+![](public/hello.png)
 
 ![](public\register.png)
 
